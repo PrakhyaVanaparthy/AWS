@@ -1,0 +1,78 @@
+List ALL EC2 instances by InstanceId and Tag 'Name'
+aws ec2 describe-instances --query 'Reservations[].Instances[].[InstanceId, Tags[?Key==`Name`].Value[] | [0]]' --output text
+
+List ALL organizational accounts by Number and Name
+aws organizations list-accounts --query 'Accounts[*].[Id,Name]' --output text
+
+List ALL organizational account NUMBERS ONLY
+aws organizations list-accounts --query 'Accounts[*].Id' --output yaml | sed 's/\(^- \x27\)//' | sed 's/\x27$//'
+
+List ALL OUs by Name starting with the root OU ID
+aws organizations list-organizational-units-for-parent --parent-id "r-3yyk" --query 'OrganizationalUnits[*].[Name]' --output text
+
+List all active StackSets by Name
+aws cloudformation list-stack-sets --status ACTIVE --query Summaries[*].StackSetName --output yaml | sed 's/^- //'
+
+List ALL Stacks in a StackSet
+aws cloudformation list-stack-instances --stack-set-name ccm-servicenow-execution-role
+to see just the StackId, AccountId and Status Reason use:
+aws cloudformation list-stack-instances --stack-set-name ccm-servicenow-execution-role --query 'Summaries[].[StackSetId,Account,StatusReason]' --output text
+
+List the most recent stack execution ID (0)
+aws cloudformation list-stack-set-operations --stack-set-name <stacksetname> --query 'Summaries[0].OperationId' --output text
+
+List the results (account number and status) from execution ID above
+aws cloudformation list-stack-set-operation-results --stack-set-name <stacksetname> --operation-id <operationidfromabovestep> --query 'Summaries[].[Account,Status]' --output text
+
+See all patches for a specific patch baseline
+aws ssm describe-effective-patches-for-patch-baseline --baseline-id "<patchbaselineid>" --query 'EffectivePatches[*].Patch.Title
+
+List ALL Service Catalog provisioned accounts
+aws servicecatalog search-provisioned-products --query 'ProvisionedProducts[?Type==`CONTROL_TOWER_ACCOUNT`].Name[]' --output yaml
+
+or if you want to remove the leading dash and space character from each line
+aws servicecatalog search-provisioned-products --query 'ProvisionedProducts[?Type==`CONTROL_TOWER_ACCOUNT`].Name[]' --output yaml | sed 's/^- //'
+
+List ALL Control Tower (organizations) member accounts
+aws organizations list-accounts --query 'Accounts[].Name' --output yaml | sed 's/^- //'
+
+List ALL StackSet names (preparation for next step)
+aws cloudformation list-stack-sets --query 'Summaries[?Status==`ACTIVE`].StackSetName' --output yaml | sed 's/^- //'
+
+Show StackSet Name, Status, Admin ARN, and Execution Role
+aws cloudformation describe-stack-set --stack-set-name ccm-sra-custom-org-config-rules --query 'StackSet.[StackSetName,Status,AdministrationRoleARN,ExecutionRoleName]'
+
+List KMS Key Aliases by Alias Name and KeyID
+aws kms list-aliases --query 'Aliases[].[AliasName,TargetKeyId]' --output text
+
+List ALL config rules by Name and Source Identifier
+aws configservice describe-config-rules --query 'ConfigRules[].[ConfigRuleName,Source.SourceIdentifier]' --output table
+
+
+List accounts in org:
+aws organizations list-accounts --query 'Accounts[*].[Id]' --output text
+Get Parameter with embedded slashes
+aws ssm get-parameter --name "//org\primary\account_id"
+
+Display Computername, instanceid, cpm backup tag, schedule tag, maintenance window tag for EC2
+aws ec2 describe-instances --query 'Reservations[*].Instances[*].[ [Tags[?Key==`Name`].Value][0][0],[Tags[?Key==`Schedule`].Value][0][0],[Tags[?Key==`maintenance-window`].Value][0][0],[Tags[?Key==`cpm backup`].Value][0][0],InstanceId ]' –output yaml
+
+Display the SSM Inventory Schema
+aws ssm get-inventory-schema
+
+Display the SSM detailed inventory for a specific Instance
+aws ssm list-inventory-entries --instance-id "i-08a9dfbfded17a3ae" --type-name "AWS:InstanceDetailedInformation"
+
+Display ALL enabled regions in organization
+aws ec2 describe-regions --query 'Regions[].[RegionName]' --output text
+
+Check to see if there are any running operations on a given StackSet
+aws cloudformation list-stack-set-operations --stack-set-name <STACK_SET_NAME> --query 'Summaries[?Status==`RUNNING`].[*]'
+
+StackSet Drift Detection
+aws cloudformation list-stack-set-operations --stack-set-name ccm-cchsnext-cpm-master-server-admin-role --query 'Summaries[?Status==`RUNNING`].[Status]' --output text
+
+Calender Status Check:
+aws ssm get-calendar-state --calendar-names "Prakhya-test"
+
+
