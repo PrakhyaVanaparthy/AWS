@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Resources: 
+  EC2RetireRole: 
+    Type: "AWS::IAM::Role"
+    Properties:
+      ManagedPolicyArns:
+        - 'arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole'
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "lambda.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      Tags : 
+      - 
+        Key: Name
+        Value: ec2-retire-role
+      Policies: 
+      - PolicyName: /*Policy Name*/
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+          - Effect: Allow
+            Action:
+            - ec2:DescribeInstances
+            - ec2:DescribeInstanceAttribute
+            - ec2:DescribeTags
+            - ec2:TerminateInstances
+            - ec2:ModifyInstanceAttribute
+            Resource: '*'
+  
+  EC2RetireLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: "python3.8"
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/${EC2RetireRole}"
+      Handler: "lambda_function.lambda_handler"
+      Code:
+        S3Bucket: /*Bucket Name*/
+        S3Key: lambda_function.zip
+      Description: Create a Lambda for ec2 retirement process
+      Runtime: "python3.8"
+      MemorySize: 128
+      Timeout: 120
+      Tags : 
+      - 
+        Key: name
+        Value: ec2-retire-function
+      TracingConfig:
+        Mode: Active
+    
+  ScheduledRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: Schedule Event Rule to retire ec2 instance based on termination date.
+      ScheduleExpression: "cron(0 17 * * ? *)"
+      State: "ENABLED"
+      Targets:
+      - Arn:
+          Fn::GetAtt:
+          - EC2RetireLambda
+          - Arn
+        Id: ec2retire
+       
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref "EC2RetireLambda"
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: 
+        Fn::GetAtt: 
+        - "ScheduledRule"
+        - "Arn"
