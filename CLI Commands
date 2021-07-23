@@ -70,7 +70,7 @@ Check to see if there are any running operations on a given StackSet
 aws cloudformation list-stack-set-operations --stack-set-name <STACK_SET_NAME> --query 'Summaries[?Status==`RUNNING`].[*]'
 
 StackSet Drift Detection
-aws cloudformation list-stack-set-operations --stack-set-name ccm-cchsnext-cpm-master-server-admin-role --query 'Summaries[?Status==`RUNNING`].[Status]' --output text
+aws cloudformation list-stack-set-operations --stack-set-name /*stackname*/ --query 'Summaries[?Status==`RUNNING`].[Status]' --output text
 
 Calender Status Check:
 aws ssm get-calendar-state --calendar-names "Prakhya-test"
